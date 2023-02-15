@@ -3,13 +3,18 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required
-
+from apispec.ext.marshmallow import MarshmallowPlugin
+from apispec import APISpec
+from flask_apispec.extension import FlaskApiSpec
 from flask import  jsonify, request
-# from models import User
+from flask_apispec import use_kwargs, marshal_with
+from schemas import VideoSchema, UserSchema, AuthenticateSchema
 
 from flask_jwt_extended import create_access_token
 from datetime import timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+
+
 
 
 app = Flask(__name__)
@@ -18,23 +23,38 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///flask_vazifa.db"
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 jwt = JWTManager(app)
+docs = FlaskApiSpec()
 
+docs.init_app(app)
+
+app.config.update({
+    'APISPEC_SPEC':APISpec(
+        title='videoblog',
+        version='v1',
+        openapi_version='2.0',
+        plugins=[MarshmallowPlugin()],
+    ),
+    'APISPEC_SWAGGER_URL' : '/swagger/'
+})
 
 
 @app.route('/register', methods = ['POST'])
-def register():
-    params = request.json
-    user = User.query.filter_by(email=params['email']).first()
+@use_kwargs(UserSchema)
+@marshal_with(AuthenticateSchema)
+def register(**kwargs):
+    user = User.query.filter_by(email=kwargs['email']).first()
     if not user:
-        user = User(**params)
+        user = User(**kwargs)
         db.session.add(user)
         db.session.commit()
         token = user.get_token()
         return jsonify({'access_token':token})
     else:
-        return jsonify({"msg":"this email already exists"})
+        return jsonify({"message":"this email already exists"})
 
 @app.route('/login', methods = ['POST'])
+@use_kwargs(UserSchema(only=('email', 'password')))
+@marshal_with(AuthenticateSchema)
 def login():
     params = request.json
     user = User.authenticate(**params)
@@ -45,78 +65,59 @@ def login():
 
 @app.route('/api', methods=['GET'])
 @jwt_required()
+@marshal_with(VideoSchema(many=True))
 def get_video():
     user_id = get_jwt_identity()
-    videos = Video.query.filter_by(user_id=user_id)
-    serialized = []
-    for video in videos:
-        serialized.append({
-            "id" : video.id,
-            "name" : video.name,
-            "description" : video.description
-        })
-    return jsonify(serialized)
-
+    videos = Video.query.filter(Video.user_id==user_id)
+    return videos
 
 @app.route('/api', methods=['POST'])
 @jwt_required()
-def new_video():
+@use_kwargs(VideoSchema)
+@marshal_with(VideoSchema)
+def new_video(**kwargs):
     user_id = get_jwt_identity()
-    params = request.json
-    video = Video(user_id=user_id, **params)
+    video = Video(user_id=user_id, **kwargs)
     db.session.add(video)
     db.session.commit()
-    serialized = {
-        "id" : video.id,
-        "name" : video.name,
-        "description" : video.description
-    }
-    return jsonify(serialized), 201
+    return video, 201
 
 
 @app.route('/api/<int:id>', methods=['GET'])
 @jwt_required()
+@marshal_with(VideoSchema())
 def get_one_video(id):
     user_id = get_jwt_identity()
     video = Video.query.filter(Video.user_id==user_id, Video.id==id).first()
-    serialized = []
-    serialized.append({
-        "id" : video.id,
-        "name" : video.name,
-        "description" : video.description
-    })
-    return jsonify(serialized), 200
+    return video, 200
 
 
 @app.route('/api/<int:id>', methods=['PUT'])
 @jwt_required()
-def update(id):
+@use_kwargs(VideoSchema)
+@marshal_with(VideoSchema)
+def update(id, **kwargs):
     user_id = get_jwt_identity()
     video = Video.query.filter(Video.user_id==user_id, Video.id==id).first()
-    params = request.json
     if not video:
-        return jsonify({"msg" : "No video with this id"}), 400
-    for key, value in params.items():
+        return jsonify({"message" : "No video with this id"}), 400
+    for key, value in kwargs.items():
         setattr(video, key, value)
     db.session.commit()
-    serialized = []
-    serialized.append({
-        "id" : video.id,
-        "name" : video.name,
-        "description" : video.description
-    })
-    return jsonify(serialized), 200
+    return video, 200
 
 
 @app.route('/api/<int:id>', methods=['DELETE'])
 @jwt_required()
+@marshal_with(VideoSchema)
 def delete_video(id):
     user_id = get_jwt_identity()
     video = Video.query.filter(Video.user_id==user_id, Video.id==id).first()
+    if not video:
+        return jsonify({"message" : "No video with this id"}), 400
     db.session.delete(video)
     db.session.commit()
     return '', 204
-
 
 
 
@@ -149,9 +150,6 @@ class User(db.Model):
     @classmethod
     def authenticate(cls, email, password):
         user = cls.query.filter(cls.email==email).first()
-        print(user.email)
-        print(email)
-        print(password)
         if not check_password_hash(user.password, password):
             raise Exception('No user with this password')
         return user
@@ -160,6 +158,15 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
     db.session.commit()
+
+
+docs.register(register)
+docs.register(login)
+docs.register(get_video)
+docs.register(new_video)
+docs.register(get_one_video)
+docs.register(update)
+docs.register(delete_video)
 
 
 if __name__ == '__main__':
