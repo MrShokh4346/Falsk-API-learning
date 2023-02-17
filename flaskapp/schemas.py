@@ -23,3 +23,7 @@ class AuthenticateSchema(Schema):
     access_token = fields.String(dump_only=True)
     message = fields.String(dump_only=True)
 
+
+class UsersListSchema(Schema):
+    name = fields.String(dump_only=True)
+    email = fields.String(dump_only=True)

@@ -4,3 +4,8 @@
 2023-02-16 15:45:41,906:__main__:WARNING:user: 3 api - read action failed with error: Big Error
 2023-02-16 15:48:04,085:__main__:WARNING:user: 3 api - read action failed with error: Big Error
 2023-02-16 16:02:47,971:__main__:WARNING:user: 3 api - read action failed with error: Big1w Error
+2023-02-16 21:54:55,759:__main__:WARNING:user: 5 api id:1 - read action failed with error: No video with this id
+2023-02-16 21:56:54,748:__main__:WARNING:Invalid input error: {'json': {'description': ['Missing data for required field.'], 'escription': ['Unknown field.']}}
+2023-02-18 00:32:04,219:flaskapp:WARNING:login action failed with email: testuser1.com with error: No user with this email
+2023-02-18 00:32:28,790:flaskapp:WARNING:login action failed with email: testuser1@test.com with error: No user with this email
+2023-02-18 00:39:27,381:flaskapp:WARNING:login action failed with email: test@testuser.com with error: No user with this email
