@@ -9,3 +9,5 @@
 2023-02-18 00:32:04,219:flaskapp:WARNING:login action failed with email: testuser1.com with error: No user with this email
 2023-02-18 00:32:28,790:flaskapp:WARNING:login action failed with email: testuser1@test.com with error: No user with this email
 2023-02-18 00:39:27,381:flaskapp:WARNING:login action failed with email: test@testuser.com with error: No user with this email
+2023-02-20 12:02:25,565:flaskapp:WARNING:login action failed with email: test@test.com with error: unsupported operand type(s) for +: 'datetime.datetime' and 'list'
+2023-02-20 12:14:26,880:flaskapp:WARNING:user: 1 api - read action failed with error: Video.get_videos() missing 1 required positional argument: 'user_id'

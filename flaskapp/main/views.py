@@ -14,7 +14,7 @@ videos = Blueprint('videos', __name__)
 def get_video():
     try:
         user_id = get_jwt_identity()
-        videos = Video.get_videos(user_id)
+        videos = Video.get_videos()
         return videos
     except Exception as e:
         logger.warning(f'user: {user_id} api - read action failed with error: {e}')

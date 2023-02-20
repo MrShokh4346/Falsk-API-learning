@@ -31,12 +31,6 @@ app.config.update({
 
 db.init_app(app)
 
-# from . import Users, Videos
-
-# with app.app_context():
-#     db.create_all()
-#     db.session.commit()
-
 
 def setup_logger():
     logger = logging.getLogger(__name__)

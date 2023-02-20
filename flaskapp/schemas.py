@@ -16,7 +16,7 @@ class UserSchema(Schema):
                          validate=[validate.Length(max=150)])
     password = fields.String(required=True, load_only=True,
                          validate=[validate.Length(max=150)])
-    video = fields.Nested(VideoSchema, dump_only=True, many=True)
+    videos = fields.Nested(VideoSchema, dump_only=True, many=True)
 
 
 class AuthenticateSchema(Schema):
@@ -24,6 +24,6 @@ class AuthenticateSchema(Schema):
     message = fields.String(dump_only=True)
 
 
-class UsersListSchema(Schema):
-    name = fields.String(dump_only=True)
-    email = fields.String(dump_only=True)
+# class UsersListSchema(Schema):
+#     name = fields.String(dump_only=True)
+#     email = fields.String(dump_only=True)

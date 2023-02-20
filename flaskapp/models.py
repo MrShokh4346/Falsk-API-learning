@@ -11,11 +11,11 @@ class Video(db.Model):
     description = db.Column(db.String(255), nullable=False)
 
     @classmethod
-    def get_videos(cls, user_id):
+    def get_videos(cls):
         try:
-            videos = cls.query.filter(cls.user_id==user_id)
+            videos = cls.query.all()
             if not videos:
-                raise Exception('You do not have any video')
+                raise Exception('THere is no video yet')
             return videos
         except Exception:
             db.session.rollback()

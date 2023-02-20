@@ -1,19 +1,34 @@
 from flaskapp.models import User
-from flaskapp.schemas import UserSchema, AuthenticateSchema, UsersListSchema
+from flaskapp.schemas import UserSchema, AuthenticateSchema
 from flaskapp import app
 from flask import Blueprint, jsonify
 from flask_apispec import use_kwargs, marshal_with
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flaskapp import logger, docs
+from flaskapp.base_view import BaseView
 
 users = Blueprint('users', __name__)
 
 
+class Profile(BaseView):
+    @jwt_required()
+    @marshal_with(UserSchema)
+    def get(self):
+        user_id = get_jwt_identity()
+        try:
+            user = User.query.get(user_id)
+            if not user:
+                raise Exception('User not found')
+            return user
+        except Exception as e:
+            logger.warning(f'user: {user_id} users - read action failed with error: {e}')
+            return jsonify({"message":str(e)}), 40
+
 
 @users.route('/users', methods=['GET'])
 @jwt_required()
-@marshal_with(UsersListSchema(many=True))
-def get_video():
+@marshal_with(UserSchema(many=True))
+def get_user():
     try:
         user_id = get_jwt_identity()
         users = User.query.all()
@@ -66,3 +81,4 @@ def error_handler(err):
 
 docs.register(register, blueprint='users')
 docs.register(login, blueprint='users')
+Profile.register(users, docs, '/profile', 'profile')
